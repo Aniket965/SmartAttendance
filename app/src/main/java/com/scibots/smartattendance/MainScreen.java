@@ -44,8 +44,18 @@ public class MainScreen extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(markTodaysAttendance()) {
-                    String url ="http://115.111.246.28:5000/attendance?id=001";
-                    StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                    String url ="http://115.111.246.28:5000/attendancesystem/mark";
+                    final JSONObject jsonBody = new JSONObject();
+                    try {
+                        // TODO: take roomkey from BLE beacons @aniket965
+                        jsonBody.put("room_key", "123456");
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    final String requestBody = jsonBody.toString();
+                    StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
                             new Response.Listener<String>() {
                                 @Override
                                 public void onResponse(String response) {
@@ -70,10 +80,19 @@ public class MainScreen extends AppCompatActivity {
                         public Map<String, String> getHeaders() throws AuthFailureError {
                             Map<String, String> params = new HashMap<String, String>();
                             params.put("Content-Type", "application/json; charset=UTF-8");
-                            String creds = AuthHelper.getInstance(MainScreen.this).getIdToken();
-                            String auth = "Bearer " + creds;
+                            String creds = AuthHelper.getInstance(MainScreen.this).getIdToken() + ":unused";
+                            String auth = "Basic " + Base64.encodeToString( creds.getBytes(), Base64.NO_WRAP);
                             params.put("Authorization", auth);
                             return params;
+                        }
+                        @Override
+                        public byte[] getBody() throws AuthFailureError {
+                            try {
+                                return requestBody == null ? null : requestBody.getBytes("utf-8");
+                            } catch (UnsupportedEncodingException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
                         }
 
                     };
