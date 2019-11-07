@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.Manifest;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.CancellationSignal;
 
@@ -31,6 +33,8 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static androidx.core.content.ContextCompat.getSystemService;
 
 @TargetApi(Build.VERSION_CODES.M)
 public class FingerprintHandler extends FingerprintManager.AuthenticationCallback {
@@ -90,9 +94,13 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
         final RequestQueue queue = Volley.newRequestQueue(context);
         String url ="http://115.111.246.28:5000/attendancesystem/mark";
         final JSONObject jsonBody = new JSONObject();
+        WifiManager manager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        String address = info.getMacAddress();
         try {
             // TODO: take roomkey from BLE beacons @aniket965
             jsonBody.put("room_key", "123456");
+            jsonBody.put("mac",address);
 
         } catch (JSONException e) {
             e.printStackTrace();
