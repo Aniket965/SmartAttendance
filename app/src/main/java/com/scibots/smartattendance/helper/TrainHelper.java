@@ -41,7 +41,7 @@ public class TrainHelper {
     public static final String LBPH_CLASSIFIER = "lbphClassifier.yml";
     public static final String FILE_NAME_PATTERN = "person.%d.%d.jpg";
     public static final int PHOTOS_TRAIN_QTY = 25;
-    public static final double ACCEPT_LEVEL = 4000.0D;
+    public static final double ACCEPT_LEVEL = 90.0D;
 
 
     public static void reset(Context context) throws Exception {
@@ -143,7 +143,7 @@ public class TrainHelper {
 
         FaceRecognizer eigenfaces = opencv_face.EigenFaceRecognizer.create();
         FaceRecognizer fisherfaces = opencv_face.FisherFaceRecognizer.create();
-        FaceRecognizer lbph = opencv_face.LBPHFaceRecognizer.create();
+        FaceRecognizer lbph = opencv_face.LBPHFaceRecognizer.create(2,8,8,8,200);
         lbph.train(photos, labels);
         File f = new File(photosFolder, LBPH_CLASSIFIER);
         f.createNewFile();
@@ -174,7 +174,7 @@ public class TrainHelper {
 
         cvtColor(rgbaMat, greyMat, CV_BGR2GRAY);
         opencv_core.RectVector detectedFaces = new opencv_core.RectVector();
-        faceDetector.detectMultiScale(greyMat, detectedFaces, 1.1, 1, 0, new Size(150, 150), new Size(500, 500));
+        faceDetector.detectMultiScale(greyMat, detectedFaces, 1.1f, 2, 2, new Size(150, 150), new Size());
         for (int i = 0; i < detectedFaces.size(); i++) {
 
             opencv_core.Rect rectFace = detectedFaces.get(0);

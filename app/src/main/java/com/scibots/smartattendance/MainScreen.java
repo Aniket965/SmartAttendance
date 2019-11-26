@@ -15,6 +15,7 @@ import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
@@ -83,7 +84,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private String[] nomes = {"", "Aniket"};
     private int absoluteFaceSize = 0;
     boolean takePhoto;
-    opencv_face.FaceRecognizer faceRecognizer = opencv_face.EigenFaceRecognizer.create();
+    opencv_face.FaceRecognizer faceRecognizer = opencv_face.LBPHFaceRecognizer.create(2,8,8,8,200);
     boolean trained;
     private static final String KEY_NAME = "yourKey";
     private Cipher cipher;
@@ -115,8 +116,8 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
                 try {
                     faceDetector = TrainHelper.loadClassifierCascade(MainScreen.this, R.raw.frontalface);
                     if(TrainHelper.isTrained(getBaseContext())) {
-                        File folder = new File(getFilesDir(), TrainHelper.TRAIN_FOLDER);
-                        File f = new File(folder, TrainHelper.EIGEN_FACES_CLASSIFIER);
+                        File folder = new File(Environment.getExternalStorageDirectory(), TrainHelper.TRAIN_FOLDER);
+                        File f = new File(folder, TrainHelper.LBPH_CLASSIFIER);
 //                        faceRecognizer.load(f.getAbsolutePath());
                         faceRecognizer.read(f.getAbsolutePath());
                         trained = true;
@@ -404,7 +405,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
         if (prediction == -1 || acceptanceLevel >= ACCEPT_LEVEL) {
             name = "Uknown face";
         } else {
-            name = nomes[prediction];
+            name = nomes[prediction] + " - " + acceptanceLevel;
         }
         int x = Math.max(dadosFace.tl().x() - 10, 0);
         int y = Math.max(dadosFace.tl().y() - 10, 0);
