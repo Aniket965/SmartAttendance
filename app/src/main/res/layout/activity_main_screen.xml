@@ -6,6 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".MainScreen">
 
+    <com.scibots.smartattendance.views.CvCameraPreview
+        android:layout_width="0dp"
+        android:layout_height="365dp"
+        android:id="@+id/camera_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:camera_type="front"
+        app:scale_type="fit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </com.scibots.smartattendance.views.CvCameraPreview>
+
     <Button
         android:id="@+id/attedance"
         android:layout_width="wrap_content"
@@ -16,6 +28,6 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.499" />
+        app:layout_constraintVertical_bias="0.922" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
