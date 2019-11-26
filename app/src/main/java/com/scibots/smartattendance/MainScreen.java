@@ -37,6 +37,8 @@ import com.scibots.smartattendance.ui.login.FingerprintHandler;
 import com.scibots.smartattendance.ui.login.LoginActivity;
 import com.scibots.smartattendance.views.CvCameraPreview;
 
+import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.IntPointer;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_face;
 import org.bytedeco.javacpp.opencv_objdetect;
@@ -56,6 +58,8 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.scibots.smartattendance.helper.TrainHelper.ACCEPT_LEVEL;
 import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_PLAIN;
 import static org.bytedeco.javacpp.opencv_core.LINE_8;
 import static org.bytedeco.javacpp.opencv_core.Mat;
@@ -76,12 +80,11 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private String TAG = "MAIN_SCREEN";
     private CvCameraPreview cameraView;
     private CascadeClassifier faceDetector;
-    private String[] nomes = {"", "You"};
+    private String[] nomes = {"", "Aniket"};
     private int absoluteFaceSize = 0;
     boolean takePhoto;
     opencv_face.FaceRecognizer faceRecognizer = opencv_face.EigenFaceRecognizer.create();
     boolean trained;
-
     private static final String KEY_NAME = "yourKey";
     private Cipher cipher;
     private KeyStore keyStore;
@@ -111,46 +114,50 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
             protected Void doInBackground(Void... voids) {
                 try {
                     faceDetector = TrainHelper.loadClassifierCascade(MainScreen.this, R.raw.frontalface);
-//                    if(TrainHelper.isTrained(getBaseContext())) {
-//                        File folder = new File(getFilesDir(), TrainHelper.TRAIN_FOLDER);
-//                        File f = new File(folder, TrainHelper.EIGEN_FACES_CLASSIFIER);
-////                        faceRecognizer.load(f.getAbsolutePath());
-//                        faceRecognizer.read(f.getAbsolutePath());
-//                        trained = true;
-//                    }
+                    if(TrainHelper.isTrained(getBaseContext())) {
+                        File folder = new File(getFilesDir(), TrainHelper.TRAIN_FOLDER);
+                        File f = new File(folder, TrainHelper.EIGEN_FACES_CLASSIFIER);
+//                        faceRecognizer.load(f.getAbsolutePath());
+                        faceRecognizer.read(f.getAbsolutePath());
+                        trained = true;
+                    }
                 } catch (Exception e) {
                     Log.d(TAG, e.getLocalizedMessage(), e);
                 }
                 return null;
+
+
             }
 
-//            @Override
-//            protected void onPostExecute(Void aVoid) {
-//                super.onPostExecute(aVoid);
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
 //                findViewById(R.id.btPhoto).setOnClickListener(new View.OnClickListener() {
 //                    @Override
 //                    public void onClick(View v) {
 //                        takePhoto = true;
 //                    }
 //                });
-//                findViewById(R.id.btTrain).setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        train();
-//                    }
-//                });
-//                findViewById(R.id.btReset).setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        try {
-//                            TrainHelper.reset(getBaseContext());
-//                            Toast.makeText(getBaseContext(), "Reseted with sucess.", Toast.LENGTH_SHORT).show();
-//                            finish();
-//                        }catch (Exception e) {
-//                            Log.d(TAG, e.getLocalizedMessage(), e);
-//                        }
-//                    }
-//                });
+                findViewById(R.id.train_camera).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        takePhoto = true;
+                        train();
+                    }
+                });
+                findViewById(R.id.reset_camera_model).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        try {
+                            TrainHelper.reset(getBaseContext());
+                            Toast.makeText(getBaseContext(), "Reseted Model.", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } catch (Exception e) {
+                            Log.d(TAG, e.getLocalizedMessage(), e);
+                        }
+                    }
+                });
+            }
         };
         asyncTask.execute();
 
@@ -176,6 +183,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
 
     }
 
+
     void showDetectedFace(opencv_core.RectVector faces, Mat rgbaMat) {
         int x = faces.get(0).x();
         int y = faces.get(0).y();
@@ -185,7 +193,44 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
         rectangle(rgbaMat, new opencv_core.Point(x, y), new opencv_core.Point(x + w, y + h), opencv_core.Scalar.GREEN, 2, LINE_8, 0);
     }
 
+        void train() {
+            int remainigPhotos = TrainHelper.PHOTOS_TRAIN_QTY - TrainHelper.qtdPhotos(getBaseContext());
+            if(remainigPhotos > 0) {
+                Toast.makeText(getBaseContext(), "You need more to call train: "+ remainigPhotos, Toast.LENGTH_SHORT).show();
+                return;
+            }else if(TrainHelper.isTrained(getBaseContext())) {
+                takePhoto = false;
+                Toast.makeText(getBaseContext(), "Already trained", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
+            Toast.makeText(getBaseContext(), "Start train: ", Toast.LENGTH_SHORT).show();
+            new AsyncTask<Void, Void, Void>() {
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    try{
+                        if(!TrainHelper.isTrained(getBaseContext())) {
+                            TrainHelper.train(getBaseContext());
+                        }
+                    }catch (Exception e) {
+                        Log.d(TAG, e.getLocalizedMessage(), e);
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    super.onPostExecute(aVoid);
+                    try {
+                        Toast.makeText(getBaseContext(), "Reseting after train - Sucess : "+ TrainHelper.isTrained(getBaseContext()), Toast.LENGTH_SHORT).show();
+                        finish();
+                    }catch (Exception e) {
+                        Log.d(TAG, e.getLocalizedMessage(), e);
+                    }
+                }
+            }.execute();
+        }
     private boolean hasPermissions(Context context, String... permissions) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
             for (String permission : permissions) {
@@ -329,10 +374,41 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     public void onCameraViewStarted(int width, int height) {
         absoluteFaceSize = (int) (width * 0.32f);
     }
-
+    void noTrainedLabel(opencv_core.Rect face, Mat rgbaMat) {
+        int x = Math.max(face.tl().x() - 10, 0);
+        int y = Math.max(face.tl().y() - 10, 0);
+        putText(rgbaMat, "No trained or train unavailable", new opencv_core.Point(x, y), FONT_HERSHEY_PLAIN, 1.4, new opencv_core.Scalar(0,255,0,0));
+    }
     @Override
     public void onCameraViewStopped() {
 
+    }
+    private void capturePhoto(Mat rgbaMat) {
+        try {
+            TrainHelper.takePhoto(getBaseContext(), 1, TrainHelper.qtdPhotos(getBaseContext()) + 1, rgbaMat.clone(), faceDetector);
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void recognize(opencv_core.Rect dadosFace, Mat grayMat, Mat rgbaMat) {
+        Mat detectedFace = new Mat(grayMat, dadosFace);
+        resize(detectedFace, detectedFace, new opencv_core.Size(TrainHelper.IMG_SIZE,TrainHelper.IMG_SIZE));
+
+        IntPointer label = new IntPointer(1);
+        DoublePointer reliability = new DoublePointer(1);
+        faceRecognizer.predict(detectedFace, label, reliability);
+        int prediction = label.get(0);
+        double acceptanceLevel = reliability.get(0);
+        String name;
+        if (prediction == -1 || acceptanceLevel >= ACCEPT_LEVEL) {
+            name = "Uknown face";
+        } else {
+            name = nomes[prediction];
+        }
+        int x = Math.max(dadosFace.tl().x() - 10, 0);
+        int y = Math.max(dadosFace.tl().y() - 10, 0);
+        putText(rgbaMat, name, new opencv_core.Point(x, y), FONT_HERSHEY_PLAIN, 1.4, new opencv_core.Scalar(0,255,0,0));
     }
 
     @Override
@@ -355,15 +431,14 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
 
             if (faces.size() == 1) {
                 showDetectedFace(faces, rgbaMat);
-//                if(takePhoto) {
-//                    capturePhoto(rgbaMat);
-//                    alertRemainingPhotos();
-//                }
-//                if(trained) {
-//                    recognize(faces.get(0), greyMat, rgbaMat);
-//                }else{
-//                    noTrainedLabel(faces.get(0), rgbaMat);
-//                }
+                if(takePhoto) {
+                    capturePhoto(rgbaMat);
+                }
+                if(trained) {
+                    recognize(faces.get(0), greyMat, rgbaMat);
+                }else{
+                    noTrainedLabel(faces.get(0), rgbaMat);
+                }
             }
             greyMat.release();
         }

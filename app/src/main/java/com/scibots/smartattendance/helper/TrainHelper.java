@@ -1,6 +1,7 @@
 package com.scibots.smartattendance.helper;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -28,9 +29,7 @@ import static org.bytedeco.javacpp.opencv_imgproc.CV_BGR2GRAY;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
-/**
- * @author djalmaafilho
- */
+
 public class TrainHelper {
 
     public static final String TAG = "TrainHelper";
@@ -46,7 +45,7 @@ public class TrainHelper {
 
 
     public static void reset(Context context) throws Exception {
-        File photosFolder = new File(context.getFilesDir(), TRAIN_FOLDER);
+        File photosFolder = new File(Environment.getExternalStorageDirectory(), TRAIN_FOLDER);
         if (photosFolder.exists()) {
 
             FilenameFilter imageFilter = new FilenameFilter() {
@@ -66,7 +65,7 @@ public class TrainHelper {
 
     public static boolean isTrained(Context context) {
         try {
-            File photosFolder = new File(context.getFilesDir(), TRAIN_FOLDER);
+            File photosFolder = new File(Environment.getExternalStorageDirectory(), TRAIN_FOLDER);
             if (photosFolder.exists()) {
 
                 FilenameFilter imageFilter = new FilenameFilter() {
@@ -97,7 +96,7 @@ public class TrainHelper {
     }
 
     public static int qtdPhotos(Context context) {
-        File photosFolder = new File(context.getFilesDir(), TRAIN_FOLDER);
+        File photosFolder = new File(Environment.getExternalStorageDirectory(), TRAIN_FOLDER);
         if (photosFolder.exists()) {
             FilenameFilter imageFilter = new FilenameFilter() {
                 @Override
@@ -114,7 +113,7 @@ public class TrainHelper {
 
     public static boolean train(Context context) throws Exception {
 
-        File photosFolder = new File(context.getFilesDir(), TRAIN_FOLDER);
+        File photosFolder = new File(Environment.getExternalStorageDirectory(), TRAIN_FOLDER);
         if (!photosFolder.exists()) return false;
 
         FilenameFilter imageFilter = new FilenameFilter() {
@@ -145,10 +144,10 @@ public class TrainHelper {
         FaceRecognizer eigenfaces = opencv_face.EigenFaceRecognizer.create();
         FaceRecognizer fisherfaces = opencv_face.FisherFaceRecognizer.create();
         FaceRecognizer lbph = opencv_face.LBPHFaceRecognizer.create();
-        eigenfaces.train(photos, labels);
-        File f = new File(photosFolder, EIGEN_FACES_CLASSIFIER);
+        lbph.train(photos, labels);
+        File f = new File(photosFolder, LBPH_CLASSIFIER);
         f.createNewFile();
-        eigenfaces.save(f.getAbsolutePath());
+        lbph.save(f.getAbsolutePath());
 
 //TODO: Implement this other classifiers
 //        fisherfaces.train(photos, labels);
@@ -164,7 +163,7 @@ public class TrainHelper {
     }
 
     public static void takePhoto(Context context, int personId, int photoNumber, Mat rgbaMat, opencv_objdetect.CascadeClassifier faceDetector) throws Exception {
-        File folder = new File(context.getFilesDir(), TRAIN_FOLDER);
+        File folder = new File(Environment.getExternalStorageDirectory(), TRAIN_FOLDER);
         if (folder.exists() && !folder.isDirectory())
             folder.delete();
         if (!folder.exists())
