@@ -10,6 +10,7 @@ public class AuthHelper {
     private static final String PREFS = "prefs";
     private static final String PREF_TOKEN = "pref_token";
     private static final String PREF_USER_NAME = "pref_name";
+    private static final String PREF_USER_EMAIl = "pref_email";
     private SharedPreferences mPrefs;
 
     private static AuthHelper sInstance;
@@ -31,10 +32,21 @@ public class AuthHelper {
         editor.putString(PREF_USER_NAME, name);
         editor.apply();
     }
+    public void setUserEmail(@NonNull String email) {
+        SharedPreferences.Editor editor = mPrefs.edit();
+        editor.putString(PREF_USER_EMAIl, email);
+        editor.apply();
+    }
+
 
     @Nullable
     public String getUserName() {
         return mPrefs.getString(PREF_USER_NAME, null);
+    }
+
+    @Nullable
+    public String getUserEmail() {
+        return mPrefs.getString(PREF_USER_EMAIl, null);
     }
 
     public void setIdToken(@NonNull String token) {

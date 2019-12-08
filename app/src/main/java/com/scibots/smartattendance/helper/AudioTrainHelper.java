@@ -1,5 +1,7 @@
 package com.scibots.smartattendance.helper;
 
+import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AudioTrainHelper {
@@ -13,5 +15,7 @@ public class AudioTrainHelper {
     private static final String INPUT_DATA_NAME_SECOND_AUDIO = "input_2:0";
     private static final String OUTPUT_SCORES_NAME_NEWMODEL = "dense_2/Sigmoid:0";
     private final ReentrantLock recordingBufferLock = new ReentrantLock();
-//    private TensorFlowInferenceInterface inferenceInterface;
+    private TensorFlowInferenceInterface inferenceInterface;
+
+
 }

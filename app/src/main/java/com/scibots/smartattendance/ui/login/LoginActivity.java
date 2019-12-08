@@ -74,8 +74,9 @@ public class LoginActivity extends AppCompatActivity {
                                 try {
                                     JSONObject jsonObject = new JSONObject(response.toString());
                                  Toast.makeText(LoginActivity.this,"Welcome, " + jsonObject.getString("name") + " !",Toast.LENGTH_SHORT).show();
-                                    AuthHelper.getInstance(LoginActivity.this).setIdToken(jsonObject.getString("token"));
+                                    AuthHelper.getInstance(LoginActivity.this).setIdToken(String.format("%s:%s",usernameEditText.getText().toString(),passwordEditText.getText().toString()));
                                     AuthHelper.getInstance(LoginActivity.this).setUserName(jsonObject.getString("name"));
+                                    AuthHelper.getInstance(LoginActivity.this).setUserEmail(usernameEditText.getText().toString());
                                     Intent intent = new Intent(LoginActivity.this, MainScreen.class);
                                     startActivity(intent);
                                     finish();

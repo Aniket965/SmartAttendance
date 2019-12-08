@@ -7,6 +7,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.Manifest;
 import android.app.KeyguardManager;
@@ -33,6 +35,14 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.estimote.mustard.rx_goodness.rx_requirements_wizard.Requirement;
+import com.estimote.mustard.rx_goodness.rx_requirements_wizard.RequirementsWizardFactory;
+import com.estimote.proximity_sdk.api.EstimoteCloudCredentials;
+import com.estimote.proximity_sdk.api.ProximityObserver;
+import com.estimote.proximity_sdk.api.ProximityObserverBuilder;
+import com.estimote.proximity_sdk.api.ProximityZone;
+import com.estimote.proximity_sdk.api.ProximityZoneBuilder;
+import com.estimote.proximity_sdk.api.ProximityZoneContext;
 import com.scibots.smartattendance.helper.TrainHelper;
 import com.scibots.smartattendance.ui.login.FingerprintHandler;
 import com.scibots.smartattendance.ui.login.LoginActivity;
@@ -57,8 +67,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.scibots.smartattendance.helper.TrainHelper.ACCEPT_LEVEL;
 import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_PLAIN;
@@ -74,6 +87,10 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
 //import static org.bytedeco.javacv.android.recognize.example.TrainHelper.ACCEPT_LEVEL;
 
 public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvCameraViewListener {
@@ -94,6 +111,11 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private FingerprintManager.CryptoObject cryptoObject;
     private FingerprintManager fingerprintManager;
     private KeyguardManager keyguardManager;
+    EstimoteCloudCredentials cloudCredentials =
+            new EstimoteCloudCredentials("minorproject-2ld", "8b95a0ee5e10c562b19d163a9a333254");
+    private ProximityObserver.Handler proximityObserverHandler;
+    private  TextView roomstatus;
+    private boolean isinroom = false;
 
     @SuppressLint("StaticFieldLeak")
     @Override
@@ -107,7 +129,66 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
                 ActivityCompat.requestPermissions(this, PERMISSIONS, 1 );
             }
         }
-        cameraView = (CvCameraPreview) findViewById(R.id.camera_view);
+        roomstatus = (TextView) findViewById(R.id.roominfo) ;
+        RequirementsWizardFactory
+                .createEstimoteRequirementsWizard()
+                .fulfillRequirements(this,
+                        new Function0<Unit>() {
+                            @Override
+                            public Unit invoke() {
+                                Log.d("app", "requirements fulfilled");
+                                ProximityObserver proximityObserver = new ProximityObserverBuilder(MainScreen.this, cloudCredentials)
+                                        .onError(new Function1<Throwable, Unit>() {
+                                            @Override
+                                            public Unit invoke(Throwable throwable) {
+                                                Log.e("app", "proximity observer error: " + throwable);
+                                                return null;
+                                            }
+                                        })
+                                        .withBalancedPowerMode()
+                                        .build();
+
+                                ProximityZone zone = new ProximityZoneBuilder()
+                                        .forTag("minorproject-2ld")
+                                        .inCustomRange(3.0)
+                                        .onContextChange(new Function1<Set<? extends ProximityZoneContext>, Unit>() {
+                                            @Override
+                                            public Unit invoke(Set<? extends ProximityZoneContext> contexts) {
+
+                                                if(contexts.size() != 0)  {
+                                                    roomstatus.setText("You are in Room");
+                                                    isinroom = true;
+                                                } else {
+                                                    roomstatus.setText("You are not in Room,Please Go in room to mark attendance");
+                                                    isinroom = false;
+                                                }
+
+                                                return null;
+                                            }
+                                        })
+                                        .build();
+
+                                proximityObserverHandler = proximityObserver.startObserving(zone);
+                                return null;
+                            }
+                        },
+                        new Function1<List<? extends Requirement>, Unit>() {
+                            @Override
+                            public Unit invoke(List<? extends Requirement> requirements) {
+                                Log.e("app", "requirements missing: " + requirements);
+                                return null;
+                            }
+                        },
+                        new Function1<Throwable, Unit>() {
+                            @Override
+                            public Unit invoke(Throwable throwable) {
+                                Log.e("app", "requirements error: " + throwable);
+                                return null;
+                            }
+                        });
+
+
+    cameraView = (CvCameraPreview) findViewById(R.id.camera_view);
         cameraView.setCvCameraViewListener(this);
 
         AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
@@ -175,9 +256,16 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
         mark.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                markTodaysAttendance();
+                if(isinroom == true)
+                {
+                    markTodaysAttendance();
 
-                Toast.makeText(MainScreen.this,"Marking Your Attendance",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainScreen.this,"Marking Your Attendance",Toast.LENGTH_SHORT).show();
+
+                } else {
+                    Toast.makeText(MainScreen.this,"Go in room first",Toast.LENGTH_SHORT).show();
+
+                }
 
             }
         });
@@ -242,7 +330,12 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
         }
         return true;
     }
-
+    public void logout(View view) {
+        Intent intent = new Intent(MainScreen.this,LoginActivity.class);
+        AuthHelper.getInstance(MainScreen.this).clear();
+        startActivity(intent);
+        finish();
+    }
     private void generateKey() throws FingerprintException {
         try {
             // Obtain a reference to the Keystore using the standard Android keystore container identifier (“AndroidKeystore”)//
@@ -319,7 +412,74 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
             super(e);
         }
     }
+
+    public void markAttendance() {
+        final RequestQueue queue = Volley.newRequestQueue(MainScreen.this);
+        String url ="http://192.168.0.107:5000/attendancesystem/mark";
+        final JSONObject jsonBody = new JSONObject();
+        WifiManager manager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = manager.getConnectionInfo();
+        String address = info.getMacAddress();
+        try {
+            jsonBody.put("room_key", "123456");
+            jsonBody.put("email", AuthHelper.getInstance(MainScreen.this).getUserEmail());
+            jsonBody.put("mac",address);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        final String requestBody = jsonBody.toString();
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject jsonObject = new JSONObject(response.toString());
+                            Log.d("fingerprinthandler",jsonObject.toString());
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+
+            }
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Content-Type", "application/json; charset=UTF-8");
+                String creds = AuthHelper.getInstance(MainScreen.this).getIdToken() + ":unused";
+                String auth = "Basic " + Base64.encodeToString( creds.getBytes(), Base64.NO_WRAP);
+                params.put("Authorization", auth);
+                return params;
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                try {
+                    return requestBody == null ? null : requestBody.getBytes("utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+        };
+
+        queue.add(stringRequest);
+
+
+    }
     public  Boolean markTodaysAttendance() {
+        if(isinroom == false) return false;
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //Get an instance of KeyguardManager and FingerprintManager//
             keyguardManager =
@@ -406,6 +566,21 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
             name = "Uknown face";
         } else {
             name = nomes[prediction] + " - " + acceptanceLevel;
+            if(isinroom) {
+                markAttendance();
+                MainScreen.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(MainScreen.this, "Attendace Marked!", Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else {
+                MainScreen.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(MainScreen.this, "First Go in Room", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
         }
         int x = Math.max(dadosFace.tl().x() - 10, 0);
         int y = Math.max(dadosFace.tl().y() - 10, 0);
