@@ -92,7 +92,7 @@ public class FingerprintHandler extends FingerprintManager.AuthenticationCallbac
 
             FingerprintManager.AuthenticationResult result) {
         final RequestQueue queue = Volley.newRequestQueue(context);
-        String url ="http://192.168.0.107:5000/attendancesystem/mark";
+        String url ="http://115.111.246.28:5000/attendancesystem/mark";
         final JSONObject jsonBody = new JSONObject();
         WifiManager manager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = manager.getConnectionInfo();

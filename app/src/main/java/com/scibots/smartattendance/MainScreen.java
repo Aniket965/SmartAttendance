@@ -98,7 +98,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private String TAG = "MAIN_SCREEN";
     private CvCameraPreview cameraView;
     private CascadeClassifier faceDetector;
-    private String[] nomes = {"", "Aniket"};
+    private String[] nomes = {"", "You"};
     private int absoluteFaceSize = 0;
     boolean takePhoto;
     opencv_face.FaceRecognizer faceRecognizer = opencv_face.LBPHFaceRecognizer.create(2,8,8,8,200);
@@ -112,8 +112,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private FingerprintManager fingerprintManager;
     private KeyguardManager keyguardManager;
     EstimoteCloudCredentials cloudCredentials =
-            new EstimoteCloudCredentials("\n" +
-                    "minorproject-2ld", "8b95a0ee5e10c562b19d163a9a333254");
+            new EstimoteCloudCredentials("minorproject-2ld", "8b95a0ee5e10c562b19d163a9a333254");
     private ProximityObserver.Handler proximityObserverHandler;
     private  TextView roomstatus;
     private boolean isinroom = false;
@@ -416,7 +415,7 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
 
     public void markAttendance() {
         final RequestQueue queue = Volley.newRequestQueue(MainScreen.this);
-        String url ="http://192.168.0.107:5000/attendancesystem/mark";
+        String url ="http://115.111.246.28:5000/attendancesystem/mark";
         final JSONObject jsonBody = new JSONObject();
         WifiManager manager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo info = manager.getConnectionInfo();
