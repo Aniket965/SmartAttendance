@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@color/colorPrimary"
     android:layout_height="match_parent"
     tools:context=".MainScreen">
 
@@ -22,7 +23,12 @@
         android:id="@+id/attedance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/roundbutton"
+        android:fontFamily="@font/montserrat_bold"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
         android:text="Mark Attendance"
+        android:textColor="@android:color/background_light"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -38,17 +44,26 @@
         android:layout_marginTop="297dp"
         android:layout_marginEnd="185dp"
         android:layout_marginBottom="25dp"
+        android:fontFamily="@font/montserrat_bold"
         android:text="Press Mark Attendance then place your Finger"
+        android:textColor="@android:color/background_light"
         app:layout_constraintBottom_toTopOf="@+id/attedance"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.465"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.318" />
 
     <Button
         android:id="@+id/train_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/roundbutton"
+        android:fontFamily="@font/montserrat_bold"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
         android:text="REGISTER"
+        android:textColor="@android:color/background_light"
         app:layout_constraintBottom_toBottomOf="@+id/attedance"
         app:layout_constraintEnd_toStartOf="@+id/attedance"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,7 +73,10 @@
         android:id="@+id/reset_camera_model"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/roundbutton"
+        android:fontFamily="@font/montserrat_bold"
         android:text="Reset"
+        android:textColor="@android:color/background_light"
         app:layout_constraintBottom_toBottomOf="@+id/attedance"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/attedance"
@@ -70,8 +88,11 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:background="@drawable/roundbutton"
+        android:fontFamily="@font/montserrat"
         android:onClick="logout"
         android:text="Logout"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/camera_view" />
 
@@ -80,10 +101,28 @@
         android:layout_width="283dp"
         android:layout_height="77dp"
         android:layout_marginTop="24dp"
+        android:fontFamily="@font/montserrat_bold"
         android:text="You are not in Room,Please Go in room to mark attendance"
         android:textAlignment="center"
+        android:textColor="@android:color/background_light"
         app:layout_constraintEnd_toEndOf="@+id/textView2"
         app:layout_constraintStart_toStartOf="@+id/textView2"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <Button
+        android:id="@+id/matchaudio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="33dp"
+        android:background="@drawable/roundbutton"
+        android:fontFamily="@font/montserrat_bold"
+        android:onClick="openAudioMatchScreen"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:text="Match Audio"
+        android:textColor="@android:color/background_light"
+        app:layout_constraintBottom_toTopOf="@+id/attedance"
+        app:layout_constraintEnd_toEndOf="@+id/attedance"
+        app:layout_constraintStart_toStartOf="@+id/attedance" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

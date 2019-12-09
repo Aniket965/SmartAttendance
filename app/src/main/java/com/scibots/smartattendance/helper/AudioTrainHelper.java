@@ -10,6 +10,7 @@ import android.util.Log;
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -34,6 +35,7 @@ public class AudioTrainHelper {
     boolean shouldContinueRecognition = true;
     private Thread recognitionThread;
     public Context context;
+    public Boolean istrained = false;
 
 
     public AudioTrainHelper(Context context) {
@@ -44,7 +46,36 @@ public class AudioTrainHelper {
 
     }
 
-    public synchronized void startRecording() {
+    public void train() {
+        startRecording(true);
+//        startTraining();
+        startRecognition();
+
+    }
+
+    private void startTraining() {
+        short[] inputBuffer = new short[RECORDING_LENGTH];
+        float[]floatInputBuffer = new float[RECORDING_LENGTH];
+
+        recordingBufferLock.lock();
+        try {
+                int maxLength = recordingBuffer.length;
+                int firstCopyLength = maxLength - recordingOffset;
+                int secondCopyLength = recordingOffset;
+                System.arraycopy(recordingBuffer, recordingOffset, inputBuffer, 0, firstCopyLength);
+                System.arraycopy(recordingBuffer, 0, inputBuffer, firstCopyLength, secondCopyLength);
+        } finally {
+                recordingBufferLock.unlock();
+        }
+
+
+        for (int i = 0; i < RECORDING_LENGTH; ++i) {
+                floatInputBuffer[i] =  inputBuffer[i] / 32767.0f;
+        }
+        Log.d("AUDIOTRAINHELPER",inputBuffer.toString());
+    }
+
+    public synchronized void startRecording(Boolean istraining) {
         if (recordingThread != null) {
             return;
         }
@@ -52,18 +83,18 @@ public class AudioTrainHelper {
         recordingThread =
                 new Thread(
                         new Runnable() {
-                            @android.support.annotation.RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
+
                             @Override
                             public void run() {
-                                record();
+                                record(istraining);
                             }
                         });
         recordingThread.start();
         recordingThread = null;
     }
 
-    @android.support.annotation.RequiresApi(api = Build.VERSION_CODES.CUPCAKE)
-    private void record() {
+    private void record(Boolean istraining) {
+        Log.d(TAG,"Recording");
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO);
 
         int bufferSize =
@@ -111,10 +142,12 @@ public class AudioTrainHelper {
                 System.arraycopy(audioBuffer, firstCopyLength, recordingBuffer, 0, secondCopyLength);
                 recordingOffset = newRecordingOffset % maxLength;
 
+
             } catch (Exception e) {
                 shouldContinue = false;
             } finally {
                 recordingBufferLock.unlock();
+
             }
         }
 
@@ -201,23 +234,8 @@ public class AudioTrainHelper {
                 floatInputBuffer[i] =  inputBuffer[i] / 32767.0f;
             }
 
+            Log.d("AUDIOTRAINHELPER", Arrays.toString(inputBuffer));
 
-            // Run the model.
-//            float[] outputScores = new float[12];
-//            inferenceInterface.feed(INPUT_DATA_NAME, floatInputBuffer, 1,1,16000);
-//            String[] outputScoresNames = new String[]{OUTPUT_SCORES_NAME};
-//            inferenceInterface.run(outputScoresNames);
-//            inferenceInterface.fetch(OUTPUT_SCORES_NAME, outputScores);
-
-//            floatInputBuffer_prev2 = floatInputBuffer_prev;
-//            floatInputBuffer_prev = floatInputBuffer;
-//
-
-
-//            String result = "";
-//            int r = argmax(outputScores);
-//            int r_env = argmax(env_outputScores);
-//            int r_newmodel = argmax(outputScores_newmodel);
 
         }
 

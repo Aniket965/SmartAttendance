@@ -112,7 +112,8 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
     private FingerprintManager fingerprintManager;
     private KeyguardManager keyguardManager;
     EstimoteCloudCredentials cloudCredentials =
-            new EstimoteCloudCredentials("minorproject-2ld", "8b95a0ee5e10c562b19d163a9a333254");
+            new EstimoteCloudCredentials("\n" +
+                    "minorproject-2ld", "8b95a0ee5e10c562b19d163a9a333254");
     private ProximityObserver.Handler proximityObserverHandler;
     private  TextView roomstatus;
     private boolean isinroom = false;
@@ -529,6 +530,12 @@ public class MainScreen extends AppCompatActivity implements CvCameraPreview.CvC
 
         }
         return true;
+    }
+
+
+    public void openAudioMatchScreen(View view) {
+        Intent intent = new Intent(MainScreen.this,AudioMatch.class);
+        startActivity(intent);
     }
 
     @Override
